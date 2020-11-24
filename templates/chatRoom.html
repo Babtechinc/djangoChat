@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="user-text">
+
+
+</div>
+  <textarea id="chat-text" cols="80" rows="30"> {% for foo in RoomChat %}
+      {{ foo.text }}
+      {% endfor %}
+  </textarea>
+    <input type="text" id="input" size="80">
+    <input id="submit" type="button" value="send">
+</body>
+{{ Room|json_script:"room-name" }}
+<script>
+    const roomName = document.getElementById('room-name').textContent
+ const chatSocket = new  WebSocket('ws://'+window.location.host+'/ws/chat/'+'{{ Room }}'+'/');
+    chatSocket.onmessage= function (e){
+        const data= JSON.parse(e.data)
+        console.log(data)
+        document.querySelector('#user-text').innerHTML=(data.texter)
+        document.querySelector('#chat-text').innerHTML+=(data.message + '\n')
+    };
+    document.querySelector("#submit").onclick = function (e) {
+        const message = document.querySelector('#input').value
+        chatSocket.send(JSON.stringify(
+            {'message':message}
+        ))
+        document.querySelector('#input').value ='';
+    }
+
+</script>
+</html>
