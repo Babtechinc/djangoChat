@@ -37,28 +37,33 @@ class chatRoomConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
 
         message =  text_data_json['message']
-        msg = await self.Pushdata(text_data_json['message'])
+
+        user =  text_data_json['user']
+        msg = await self.Pushdata(text_data_json['message'],text_data_json['user'])
 
         # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'chat_msg',
-                'message': message
+                'message': message,
+                'user':user
             }
         )
 
     @database_sync_to_async
-    def Pushdata(self,message):
-        msg = ChatModel.objects.get_or_create(text=message, room=self.room_group_name)
+    def Pushdata(self,message,user):
+        msg = ChatModel.objects.get_or_create(text=message, room=self.room_group_name,user=user)
 
 
     async def chat_msg(self, event):
             texter = event['message']
+            user  = event['user']
 
             # Send message to WebSocket
             await self.send(text_data=json.dumps({
-                'message': texter
+                'message': texter,
+                'user':user
             }))
     async def disconnect(self,close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
